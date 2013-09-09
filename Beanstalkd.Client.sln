@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Beanstalkd.Client.net20", "Beanstalkd.Client\Beanstalkd.Client.net20.csproj", "{282197F4-E8E6-4FB0-9DAD-64E96CD3FDEA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Beanstalkd.Client.net40", "Beanstalkd.Client\Beanstalkd.Client.net40.csproj", "{DEC499E7-2B19-42BD-9F0A-690EA1125BB8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{4765A070-921A-457A-A3A5-3833E5EC0BB8}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Beanstalkd.Client.Tests", "Beanstalkd.Client.Tests\Beanstalkd.Client.Tests.csproj", "{3B8FF995-1142-4E55-BF2B-DE01DD8CF68D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{282197F4-E8E6-4FB0-9DAD-64E96CD3FDEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{282197F4-E8E6-4FB0-9DAD-64E96CD3FDEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{282197F4-E8E6-4FB0-9DAD-64E96CD3FDEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{282197F4-E8E6-4FB0-9DAD-64E96CD3FDEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEC499E7-2B19-42BD-9F0A-690EA1125BB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEC499E7-2B19-42BD-9F0A-690EA1125BB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEC499E7-2B19-42BD-9F0A-690EA1125BB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B8FF995-1142-4E55-BF2B-DE01DD8CF68D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B8FF995-1142-4E55-BF2B-DE01DD8CF68D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B8FF995-1142-4E55-BF2B-DE01DD8CF68D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B8FF995-1142-4E55-BF2B-DE01DD8CF68D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
