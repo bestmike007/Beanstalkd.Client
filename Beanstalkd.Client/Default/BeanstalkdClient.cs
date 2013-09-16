@@ -50,7 +50,7 @@ namespace Beanstalkd.Client.Default
             if (connectionTimeout.WaitOne(10000, false) && TcpClient != null && TcpClient.Connected)
             {
                 var recBuff = new byte[20];
-                TcpClient.Client.Send(new byte[] {65, 13, 10});
+                TcpClient.Client.Send(new byte[] { 65, 13, 10 });
                 TcpClient.Client.Receive(recBuff);
 
                 if (Encoding.ASCII.GetString(recBuff, 0, 17) != "UNKNOWN_COMMAND\r\n")
@@ -62,7 +62,7 @@ namespace Beanstalkd.Client.Default
                 throw new BeanstalkdException(BeanstalkdExceptionCode.ConnectionError);
             }
 
-            _readState = new ReadState {ExpectType = ExpectType.Nothing};
+            _readState = new ReadState { ExpectType = ExpectType.Nothing };
             _queue = new Queue<Command>();
             _receiveBuff = new MemoryStream(8192);
             TcpClient.Client.BeginReceive(_byteBuff, 0, _byteBuff.Length, SocketFlags.None, OnReceive, TcpClient.Client);
@@ -70,7 +70,8 @@ namespace Beanstalkd.Client.Default
 
         private void OnReceive(IAsyncResult ar)
         {
-            var socket = (Socket) ar.AsyncState;
+            var socket = (Socket)ar.AsyncState;
+            if (!socket.Connected) return;
             SocketError socketError;
             var size = socket.EndReceive(ar, out socketError);
             if (socketError != SocketError.Success)
@@ -253,7 +254,7 @@ namespace Beanstalkd.Client.Default
         {
             get
             {
-                var command = new Command {RequestLine = "list-tube-used"};
+                var command = new Command { RequestLine = "list-tube-used" };
                 BeginCommand(command);
                 command.Wait();
                 var match = Regex.Match(command.ResponseLine, "^USING (.+)$");
@@ -265,7 +266,7 @@ namespace Beanstalkd.Client.Default
         public string Use(string tube)
         {
             if (string.IsNullOrEmpty(tube)) throw new ArgumentNullException("tube");
-            var command = new Command {RequestLine = string.Format("use {0}", tube)};
+            var command = new Command { RequestLine = string.Format("use {0}", tube) };
             BeginCommand(command);
             command.Wait();
 
@@ -386,7 +387,7 @@ namespace Beanstalkd.Client.Default
 
         public bool Delete(uint jobId)
         {
-            var command = new Command {RequestLine = string.Format("delete {0}", jobId)};
+            var command = new Command { RequestLine = string.Format("delete {0}", jobId) };
             BeginCommand(command);
             command.Wait();
 
@@ -395,7 +396,7 @@ namespace Beanstalkd.Client.Default
 
         public bool Release(uint jobId, uint priority = 4294967295, uint delay = 0)
         {
-            var command = new Command {RequestLine = string.Format("release {0} {1} {2}", jobId, priority, delay)};
+            var command = new Command { RequestLine = string.Format("release {0} {1} {2}", jobId, priority, delay) };
             BeginCommand(command);
             command.Wait();
 
@@ -405,7 +406,7 @@ namespace Beanstalkd.Client.Default
 
         public bool Bury(uint jobId, uint priority = 4294967295)
         {
-            var command = new Command {RequestLine = string.Format("bury {0} {1}", jobId, priority)};
+            var command = new Command { RequestLine = string.Format("bury {0} {1}", jobId, priority) };
             BeginCommand(command);
             command.Wait();
 
@@ -414,7 +415,7 @@ namespace Beanstalkd.Client.Default
 
         public bool Touch(uint jobId)
         {
-            var command = new Command {RequestLine = string.Format("touch {0}", jobId)};
+            var command = new Command { RequestLine = string.Format("touch {0}", jobId) };
             BeginCommand(command);
             command.Wait();
 
@@ -424,7 +425,7 @@ namespace Beanstalkd.Client.Default
         public uint Watch(string tube)
         {
             if (string.IsNullOrEmpty(tube)) throw new ArgumentNullException("tube");
-            var command = new Command {RequestLine = string.Format("watch {0}", tube)};
+            var command = new Command { RequestLine = string.Format("watch {0}", tube) };
             BeginCommand(command);
             command.Wait();
 
@@ -438,7 +439,7 @@ namespace Beanstalkd.Client.Default
         public bool Ignore(string tube)
         {
             if (string.IsNullOrEmpty(tube)) throw new ArgumentNullException("tube");
-            var command = new Command {RequestLine = string.Format("ignore {0}", tube)};
+            var command = new Command { RequestLine = string.Format("ignore {0}", tube) };
             BeginCommand(command);
             command.Wait();
 
@@ -520,7 +521,7 @@ namespace Beanstalkd.Client.Default
 
         public uint Kick(uint bound)
         {
-            var command = new Command {RequestLine = string.Format("kick {0}", bound)};
+            var command = new Command { RequestLine = string.Format("kick {0}", bound) };
             BeginCommand(command);
             command.Wait();
 
@@ -576,7 +577,7 @@ namespace Beanstalkd.Client.Default
 
         public ServerStats Stats()
         {
-            var command = new Command {RequestLine = "stats", ExpectData = line => Regex.IsMatch(line, "^OK \\d+$")};
+            var command = new Command { RequestLine = "stats", ExpectData = line => Regex.IsMatch(line, "^OK \\d+$") };
             BeginCommand(command);
             command.Wait();
 
@@ -633,7 +634,7 @@ namespace Beanstalkd.Client.Default
                         continue;
                     }
 
-                    var lineParts = line.Split(new[] {':'}, 2);
+                    var lineParts = line.Split(new[] { ':' }, 2);
 
                     if (lineParts.Length == 2)
                         yaml.Add(lineParts[0], lineParts[1].Trim());
