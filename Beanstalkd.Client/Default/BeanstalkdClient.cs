@@ -74,7 +74,7 @@ namespace Beanstalkd.Client.Default
             if (!socket.Connected) return;
             SocketError socketError;
             var size = socket.EndReceive(ar, out socketError);
-            if (socketError != SocketError.Success)
+            if (size == 0 || socketError != SocketError.Success)
             {
                 Dispose();
                 return;
