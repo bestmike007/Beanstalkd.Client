@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Beanstalkd.Client.Default;
 using NUnit.Framework;
 
@@ -7,11 +8,12 @@ namespace Beanstalkd.Client.Tests
     [TestFixture]
     public class DefaultClientTest
     {
-        private const string BeanstalkdHost = "127.0.0.1";
+        private const string BeanstalkdHost = "localhost";
         private const string TestTube = "test";
 
-        static DefaultClientTest()
+        public DefaultClientTest()
         {
+            LogProvider.Current.Register((level, msg) => Console.WriteLine("[{0}] {1}", level, msg));
             using (var client = new BeanstalkdClient(BeanstalkdHost))
             {
                 client.Watch(TestTube);

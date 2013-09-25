@@ -8,6 +8,7 @@ namespace Beanstalkd.Client.Default
 {
     public sealed class ManagedBeanstalkdClientFactory : RealProxy
     {
+        private static readonly LogProvider Log = LogProvider.Current;
         private IBeanstalkdClient _client;
         private readonly string _host;
         private readonly int _port;
@@ -21,7 +22,7 @@ namespace Beanstalkd.Client.Default
             _port = port;
         }
 
-        public static IBeanstalkdClient Create(string host, int port)
+        public static IBeanstalkdClient Create(string host = "localhost", int port = 11300)
         {
             return (IBeanstalkdClient)new ManagedBeanstalkdClientFactory(host, port).GetTransparentProxy();
         }
@@ -32,6 +33,7 @@ namespace Beanstalkd.Client.Default
             {
                 if (_client == null || _client.Disposed)
                 {
+                    if (_client != null) Log.Info("Client disconnected, trying to reconnect and restore current state.");
                     _client = new BeanstalkdClient(_host, _port);
                     _watchList.ForEach(tube => _client.Watch(tube));
                     if (!_watchList.Contains("default")) _client.Ignore("default");
@@ -44,17 +46,20 @@ namespace Beanstalkd.Client.Default
                 if (method.Name == "Watch" && methodCall.ArgCount == 1
                     && result is uint && !_watchList.Contains((string)methodCall.InArgs[0]))
                     _watchList.Add((string)methodCall.InArgs[0]);
+                if (method.Name == "Ignore" && methodCall.ArgCount == 1
+                    && result is bool && _watchList.Contains((string)methodCall.InArgs[0]))
+                    _watchList.Remove((string)methodCall.InArgs[0]);
                 return new ReturnMessage(result, null, 0, methodCall.LogicalCallContext, methodCall);
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception: " + e);
                 if (!(e is TargetInvocationException) || e.InnerException == null)
                     return new ReturnMessage(e, msg as IMethodCallMessage);
 
                 var ex = e.InnerException as BeanstalkdException;
                 if (retry && ex != null && ex.Code == BeanstalkdExceptionCode.ConnectionError)
                 {
+                    if (_client != null && !_client.Disposed) _client.Dispose();
                     return Invoke(msg, false);
                 }
                 return new ReturnMessage(e.InnerException, msg as IMethodCallMessage);

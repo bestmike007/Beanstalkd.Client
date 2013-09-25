@@ -43,6 +43,7 @@
     <Compile Include="Job.cs" />
     <Compile Include="JobStats.cs" />
     <Compile Include="JobStatus.cs" />
+    <Compile Include="LogProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReserveStatus.cs" />
     <Compile Include="ServerStats.cs" />

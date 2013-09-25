@@ -39,15 +39,29 @@ namespace Beanstalkd.Client.Default
 
             TcpClient.BeginConnect(host, port, delegate(IAsyncResult result)
             {
-                if (TcpClient.Client != null)
-                    TcpClient.EndConnect(result);
-                else
-                    TcpClient.Close();
-
+                try
+                {
+                    if (TcpClient.Client != null)
+                        TcpClient.EndConnect(result);
+                    else
+                    {
+                        TcpClient.Close();
+                        TcpClient = null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogProvider.Current.Error(ex, "Error connecting to server.");
+                    if (TcpClient != null)
+                    {
+                        TcpClient.Close();
+                        TcpClient = null;
+                    }
+                }
                 connectionTimeout.Set();
             }, TcpClient);
 
-            if (connectionTimeout.WaitOne(10000, false) && TcpClient != null && TcpClient.Connected)
+            if (connectionTimeout.WaitOne(10000, false) && TcpClient != null)
             {
                 var recBuff = new byte[20];
                 TcpClient.Client.Send(new byte[] { 65, 13, 10 });
@@ -58,7 +72,6 @@ namespace Beanstalkd.Client.Default
             }
             else
             {
-                TcpClient.Close();
                 throw new BeanstalkdException(BeanstalkdExceptionCode.ConnectionError);
             }
 
@@ -76,6 +89,8 @@ namespace Beanstalkd.Client.Default
             var size = socket.EndReceive(ar, out socketError);
             if (size == 0 || socketError != SocketError.Success)
             {
+                if (size > 0) LogProvider.Current.InfoFormat("Socket disconnected, code: {0}.", socketError);
+                else LogProvider.Current.InfoFormat("Server socket closed.");
                 Dispose();
                 return;
             }
@@ -83,7 +98,9 @@ namespace Beanstalkd.Client.Default
 
             TcpClient.Client.BeginReceive(_byteBuff, 0, _byteBuff.Length, SocketFlags.None, out socketError, OnReceive,
                 TcpClient.Client);
-            if (socketError != SocketError.Success) Dispose();
+            if (socketError == SocketError.Success) return;
+            LogProvider.Current.WarnFormat("Fail to begin receive from socket, code: {0}.", socketError);
+            Dispose();
         }
 
         private void OnBuffer(byte b)
@@ -148,6 +165,7 @@ namespace Beanstalkd.Client.Default
 
         private void BeginCommand(Command command = null)
         {
+            if (command != null) LogProvider.Current.DebugFormat("Begin send command {0}", command.RequestLine);
             if (Disconnected || Disposed)
             {
                 if (command != null)
@@ -184,6 +202,7 @@ namespace Beanstalkd.Client.Default
                 SocketError error;
                 TcpClient.Client.Send(buffer.ToArray(), 0, buffer.Count, SocketFlags.None, out error);
                 if (error == SocketError.Success) return;
+                LogProvider.Current.WarnFormat("Unable to send {0}, error: {1}.", command.RequestLine, error);
                 command.Code = BeanstalkdExceptionCode.ConnectionError;
                 Dispose();
             }
@@ -196,6 +215,7 @@ namespace Beanstalkd.Client.Default
                 var command = _readState.Command;
                 _readState.Command = null;
                 command.WaitHandle.Set();
+                LogProvider.Current.DebugFormat("End command (request: {0}, response: {1})", command.RequestLine, command.ResponseLine);
                 if (!Disconnected && !Disposed) BeginCommand();
             }
         }
