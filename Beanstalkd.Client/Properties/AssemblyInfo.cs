@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 
 [assembly: AssemblyTitle("Beanstalkd.Client")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Yet another beanstalkd protocol 1.3 C# client")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Beanstalkd.Client")]

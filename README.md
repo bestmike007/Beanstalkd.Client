@@ -10,7 +10,7 @@ Features
 =================
 
 + Basic beanstalkd client
-+ Managed beanstalkd client with auto-reconnect feature (working on)
++ Managed beanstalkd client with auto-reconnect feature
 + Managed beanstalkd client pool (working on)
 + Managed beanstalkd client pool with multiple servers (wokring on)
 
