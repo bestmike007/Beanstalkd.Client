@@ -19,7 +19,6 @@ namespace Beanstalkd.Client.Default
     {
         public ExpectType ExpectType { get; set; }
         public int DataLength { get; set; }
-        public int BufferIndex { get; set; }
         public byte LastByte { get; set; }
         public Command Command { get; set; }
     }
@@ -109,16 +108,15 @@ namespace Beanstalkd.Client.Default
             {
                 case ExpectType.ResponseLine:
                     _receiveBuff.WriteByte(b);
-                    if (_readState.BufferIndex == 0)
+                    if (_receiveBuff.Length == 0)
                     {
-                        _readState.LastByte = b;
-                        _readState.BufferIndex++;
+                        _readState.LastByte = 0;
                         return;
                     }
                     if (_readState.LastByte == '\r' && b == '\n')
                     {
                         var buffer = _receiveBuff.ToArray();
-                        _readState.Command.ResponseLine = Encoding.ASCII.GetString(buffer, 0, _readState.BufferIndex - 1);
+                        _readState.Command.ResponseLine = Encoding.ASCII.GetString(buffer).Trim();
                         _receiveBuff = new MemoryStream(8192);
                         if (_readState.Command.ExpectData != null &&
                             _readState.Command.ExpectData(_readState.Command.ResponseLine))
@@ -133,7 +131,6 @@ namespace Beanstalkd.Client.Default
                                 Dispose();
                                 return;
                             }
-                            _readState.BufferIndex = 0;
                             _readState.LastByte = 0;
                             _readState.DataLength = dataLength;
                             _readState.ExpectType = ExpectType.Data;
@@ -141,7 +138,6 @@ namespace Beanstalkd.Client.Default
                         else EndCommand();
                     }
                     _readState.LastByte = b;
-                    _readState.BufferIndex++;
                     break;
                 case ExpectType.Data:
                     _receiveBuff.WriteByte(b);
@@ -187,7 +183,6 @@ namespace Beanstalkd.Client.Default
                     if (_queue.Count == 0) return;
                     command = _queue.Dequeue();
                 }
-                _readState.BufferIndex = 0;
                 _readState.Command = command;
                 _readState.DataLength = 0;
                 _readState.ExpectType = ExpectType.ResponseLine;

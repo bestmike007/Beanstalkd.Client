@@ -41,7 +41,9 @@ namespace Beanstalkd.Client.Default
                 }
                 var methodCall = (IMethodCallMessage)msg;
                 var method = (MethodInfo)methodCall.MethodBase;
-                var result = method.Invoke(_client, methodCall.InArgs);
+                var args = methodCall.Args;
+                var result = typeof(BeanstalkdClient).InvokeMember(methodCall.MethodName,
+                    BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Instance, null, _client, args);
                 if (method.Name == "Use" && null != result as string) _currentTube = result as string;
                 if (method.Name == "Watch" && methodCall.ArgCount == 1
                     && result is uint && !_watchList.Contains((string)methodCall.InArgs[0]))
@@ -49,7 +51,7 @@ namespace Beanstalkd.Client.Default
                 if (method.Name == "Ignore" && methodCall.ArgCount == 1
                     && result is bool && _watchList.Contains((string)methodCall.InArgs[0]))
                     _watchList.Remove((string)methodCall.InArgs[0]);
-                return new ReturnMessage(result, null, 0, methodCall.LogicalCallContext, methodCall);
+                return new ReturnMessage(result, args, args.Length, methodCall.LogicalCallContext, methodCall);
             }
             catch (Exception e)
             {

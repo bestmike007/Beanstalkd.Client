@@ -57,6 +57,9 @@ namespace Beanstalkd.Client.Tests
                     watchList = client.WatchList;
                     Assert.AreEqual(1, watchList.Count);
                     Assert.AreEqual(TestTube, watchList[0]);
+                    Job job;
+                    Assert.AreEqual(ReserveStatus.Timeout, client.Reserve(0, out job));
+                    Assert.Null(job);
                 }
                 catch (BeanstalkdException ex)
                 {
