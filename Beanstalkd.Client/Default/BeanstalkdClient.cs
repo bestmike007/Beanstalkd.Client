@@ -95,6 +95,12 @@ namespace Beanstalkd.Client.Default
             }
             lock (_readState) for (var i = 0; i < size; i++) OnBuffer(_byteBuff[i]);
 
+            if (Disposed) return;
+            if (TcpClient == null || TcpClient.Client == null)
+            {
+                Dispose();
+                return;
+            }
             TcpClient.Client.BeginReceive(_byteBuff, 0, _byteBuff.Length, SocketFlags.None, out socketError, OnReceive,
                 TcpClient.Client);
             if (socketError == SocketError.Success) return;
