@@ -82,30 +82,39 @@ namespace Beanstalkd.Client.Default
 
         private void OnReceive(IAsyncResult ar)
         {
-            var socket = (Socket)ar.AsyncState;
-            if (!socket.Connected) return;
-            SocketError socketError;
-            var size = socket.EndReceive(ar, out socketError);
-            if (size == 0 || socketError != SocketError.Success)
+            try
             {
-                if (size > 0) LogProvider.Current.InfoFormat("Socket disconnected, code: {0}.", socketError);
-                else LogProvider.Current.InfoFormat("Server socket closed.");
-                Dispose();
-                return;
-            }
-            lock (_readState) for (var i = 0; i < size; i++) OnBuffer(_byteBuff[i]);
+                var socket = (Socket)ar.AsyncState;
+                if (!socket.Connected) return;
+                SocketError socketError;
+                var size = socket.EndReceive(ar, out socketError);
+                if (size == 0 || socketError != SocketError.Success)
+                {
+                    if (size > 0) LogProvider.Current.InfoFormat("Socket disconnected, code: {0}.", socketError);
+                    else LogProvider.Current.InfoFormat("Server socket closed.");
+                    Dispose();
+                    return;
+                }
+                lock (_readState) for (var i = 0; i < size; i++) OnBuffer(_byteBuff[i]);
 
-            if (Disposed) return;
-            if (TcpClient == null || TcpClient.Client == null)
-            {
+                if (Disposed) return;
+                if (TcpClient == null || TcpClient.Client == null)
+                {
+                    Dispose();
+                    return;
+                }
+                TcpClient.Client.BeginReceive(_byteBuff, 0, _byteBuff.Length, SocketFlags.None, out socketError,
+                    OnReceive,
+                    TcpClient.Client);
+                if (socketError == SocketError.Success) return;
+                LogProvider.Current.WarnFormat("Fail to begin receive from socket, code: {0}.", socketError);
                 Dispose();
-                return;
             }
-            TcpClient.Client.BeginReceive(_byteBuff, 0, _byteBuff.Length, SocketFlags.None, out socketError, OnReceive,
-                TcpClient.Client);
-            if (socketError == SocketError.Success) return;
-            LogProvider.Current.WarnFormat("Fail to begin receive from socket, code: {0}.", socketError);
-            Dispose();
+            catch (Exception ex)
+            {
+                LogProvider.Current.ErrorFormat("Beanstalk client OnReceive error: {0}.", ex);
+                Dispose();
+            }
         }
 
         private void OnBuffer(byte b)
