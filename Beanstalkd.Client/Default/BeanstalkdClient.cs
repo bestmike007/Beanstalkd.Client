@@ -30,6 +30,8 @@ namespace Beanstalkd.Client.Default
         private MemoryStream _receiveBuff;
         private readonly byte[] _byteBuff = new byte[256];
         private readonly ReadState _readState;
+        private readonly object _comsumerLock = new object();
+        private readonly object _providerLock = new object();
 
         public BeanstalkdClient(string host = "localhost", int port = 11300)
         {
@@ -297,9 +299,11 @@ namespace Beanstalkd.Client.Default
         {
             if (string.IsNullOrEmpty(tube)) throw new ArgumentNullException("tube");
             var command = new Command { RequestLine = string.Format("use {0}", tube) };
-            BeginCommand(command);
-            command.Wait();
-
+            lock (_providerLock)
+            {
+                BeginCommand(command);
+                command.Wait();
+            }
             var match = Regex.Match(command.ResponseLine, "^USING (.+)$");
             if (!match.Success) throw new BeanstalkdException(BeanstalkdExceptionCode.UnexpectedResponse);
             return match.Groups[1].Value;
@@ -314,8 +318,11 @@ namespace Beanstalkd.Client.Default
                 RequestData = data,
                 RequestLine = string.Format("put {0} {1} {2} {3}", priority, delay, ttr, data.Length)
             };
-            BeginCommand(command);
-            command.Wait();
+            lock (_providerLock)
+            {
+                BeginCommand(command);
+                command.Wait();
+            }
 
             if (command.ResponseLine.Equals("JOB_TOO_BIG", StringComparison.OrdinalIgnoreCase))
                 throw new BeanstalkdException(BeanstalkdExceptionCode.JobTooBig);
@@ -328,8 +335,11 @@ namespace Beanstalkd.Client.Default
 
         public uint Put(string tube, byte[] data, uint priority = 4294967295, uint delay = 0, uint ttr = 10)
         {
-            Use(tube);
-            return Put(data, priority, delay, ttr);
+            lock (_providerLock)
+            {
+                Use(tube);
+                return Put(data, priority, delay, ttr);
+            }
         }
 
         public List<string> WatchList
@@ -362,8 +372,11 @@ namespace Beanstalkd.Client.Default
                 RequestLine = "reserve",
                 ExpectData = line => Regex.IsMatch(line, "^RESERVED (\\d+) (\\d+)$")
             };
-            BeginCommand(command);
-            command.Wait();
+            lock (_comsumerLock)
+            {
+                BeginCommand(command);
+                command.Wait();
+            }
 
             if ("DEADLINE_SOON".Equals(command.ResponseLine, StringComparison.OrdinalIgnoreCase))
             {
@@ -392,8 +405,11 @@ namespace Beanstalkd.Client.Default
                 RequestLine = string.Format("reserve-with-timeout {0}", timeout),
                 ExpectData = line => Regex.IsMatch(line, "^RESERVED (\\d+) (\\d+)$")
             };
-            BeginCommand(command);
-            command.Wait();
+            lock (_comsumerLock)
+            {
+                BeginCommand(command);
+                command.Wait();
+            }
 
             if ("DEADLINE_SOON".Equals(command.ResponseLine, StringComparison.OrdinalIgnoreCase))
             {
@@ -456,8 +472,11 @@ namespace Beanstalkd.Client.Default
         {
             if (string.IsNullOrEmpty(tube)) throw new ArgumentNullException("tube");
             var command = new Command { RequestLine = string.Format("watch {0}", tube) };
-            BeginCommand(command);
-            command.Wait();
+            lock (_comsumerLock)
+            {
+                BeginCommand(command);
+                command.Wait();
+            }
 
             uint count;
             var match = Regex.Match(command.ResponseLine, "^WATCHING (\\d+)$");
@@ -470,8 +489,11 @@ namespace Beanstalkd.Client.Default
         {
             if (string.IsNullOrEmpty(tube)) throw new ArgumentNullException("tube");
             var command = new Command { RequestLine = string.Format("ignore {0}", tube) };
-            BeginCommand(command);
-            command.Wait();
+            lock (_comsumerLock)
+            {
+                BeginCommand(command);
+                command.Wait();
+            }
 
             return !"NOT_IGNORED".Equals(command.ResponseLine) &&
                    Regex.IsMatch(command.ResponseLine, "^WATCHING (\\d+)$");
