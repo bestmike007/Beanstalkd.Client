@@ -39,9 +39,11 @@
     <Compile Include="BeanstalkdException.cs" />
     <Compile Include="BeanstalkdExceptionCode.cs" />
     <Compile Include="Default\BeanstalkdClient.cs" />
+    <Compile Include="Default\JobBulkProducer.cs" />
     <Compile Include="Default\ManagedBeanstalkdClientFactory.cs" />
     <Compile Include="Default\PooledBeanstalkdClient.cs" />
     <Compile Include="IBeanstalkdClient.cs" />
+    <Compile Include="IBulkProducer.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="JobStats.cs" />
     <Compile Include="JobStatus.cs" />
